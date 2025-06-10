@@ -1,29 +1,43 @@
-
 import streamlit as st
 import pandas as pd
 
-# Load the data
+# إعداد الصفحة
+st.set_page_config(page_title="Medical Approval Assistant", page_icon="🩺", layout="wide")
+
+# الشريط الجانبي
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/3774/3774299.png", width=120)
+    st.title("🔍 Menu")
+    st.markdown("Use the dropdown below to choose a procedure.")
+    
+# العنوان الرئيسي
+st.title("🩺 Medical Approval Assistant")
+st.markdown("Helping insurance doctors verify the required documents for each medical procedure.")
+st.markdown("---")
+
+# تحميل ملف الإكسل
 @st.cache_data
 def load_data():
-    df = pd.read_excel("Medical_Approvals_Tool_With_Search.xlsx", sheet_name="Procedure Database")
-    return df
+    return pd.read_excel("Medical_Approvals_Tool_With_Search.xlsx")
 
 df = load_data()
 
-# App title
-st.title("Medical Approval Support Tool")
+# اختيار الإجراء الطبي
+procedure_list = df['Procedure'].dropna().unique().tolist()
+selected_procedure = st.selectbox("Select a medical procedure:", procedure_list)
 
-# Dropdown to select procedure
-procedure = st.selectbox("Select a Medical Procedure", df["Procedure Name"])
+# البحث وعرض النتائج
+if selected_procedure:
+    result_df = df[df['Procedure'] == selected_procedure]
 
-# Filter data for the selected procedure
-selected = df[df["Procedure Name"] == procedure].iloc[0]
+    # عرض النتائج داخل بطاقات
+    for index, row in result_df.iterrows():
+        with st.expander(f"📄 {row['Procedure']} - Details"):
+            st.write(f"**Required Questions:**\n{row['Required Questions']}")
+            st.write(f"**Expected Findings:**\n{row['Expected Findings']}")
+            st.write(f"**Notes:**\n{row['Notes'] if pd.notna(row['Notes']) else 'No additional notes.'}")
+            st.markdown("---")
 
-# Display the information
-st.subheader("Procedure Information")
-st.markdown(f"**Diagnosis:** {selected['Diagnosis']}")
-st.markdown(f"**Key Questions to Ask:** {selected['Key Questions to Ask']}")
-st.markdown(f"**Required Investigations:** {selected['Required Investigations']}")
-st.markdown(f"**Acceptance Criteria:** {selected['Acceptance Criteria']}")
-st.markdown(f"**Notes:** {selected['Notes']}")
-st.markdown(f"**Covered by Insurance?:** {selected['Covered by Insurance?']}")
+# تذييل
+st.markdown("----")
+st.caption("Built with ❤️ by Dr. Kamal | Powered by Streamlit")
